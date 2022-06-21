@@ -1,0 +1,64 @@
+version: '3'
+services:
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:latest
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /home/pi/containers/portainer:/data
+    ports:
+      - 9000:9000
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    restart: unless-stopped
+    ports:
+      - '53:53/tcp'
+      - '53:53/udp'
+      - '80:80/tcp'
+    environment:
+      TZ: 'Europe/Berlin'
+      WEBPASSWORD: ''
+    volumes:
+      - '/home/pi/containers/pi-hole/etc-pihole/:/etc/pihole/'
+      - '/home/pi/containers/pi-hole/etc-dnsmasq.d/:/etc/dnsmasq.d/'
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+  deconz:
+    container_name: deconz
+    image: deconzcommunity/deconz
+    restart: unless-stopped
+    ports:
+      - 4526:80
+      - 443:443
+    volumes:
+      - '/etc/localtime:/etc/localtime:ro'
+      - '/home/pi/containers/deconz/:/opt/deCONZ'
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
+  mariadb:
+    container_name: mariadb
+    image: jsurf/rpi-mariadb:latest
+    restart: unless-stopped
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD
+    volumes:
+      - '/home/pi/containers/mariadb/:/var/lib/mysql'
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    restart: unless-stopped
+    volumes:
+      - /home/pi/containers/home-assistant/:/config
+      - /etc/localtime:/etc/localtime:ro
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    privileged: true
+    network_mode: host
